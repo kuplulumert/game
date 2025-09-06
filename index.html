@@ -1,1 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>GBA-Style Game Engine</title>
+    <style>
+        /* --- Basic Page Styles --- */
+        body {
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+            font-family: 'Press Start 2P', monospace;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden; /* Prevent scrollbars */
+        }
+
+        /* --- Game Container --- */
+        #game-container {
+            position: relative;
+            border: 8px solid #4a4a4a;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            background-color: #000;
+            padding: 10px;
+            /* Maintain aspect ratio */
+            width: 90vmin;
+            height: 66vmin;
+            max-width: 960px; /* 15 * 16 * 4 */
+            max-height: 704px; /* 11 * 16 * 4 */
+        }
+
+        /* --- Canvas Styling --- */
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-crisp-edges;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        #ui-layer {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: calc(100% - 20px);
+            height: calc(100% - 20px);
+            pointer-events: none; /* Let clicks pass through */
+        }
+
+        /* --- UI & Info Text --- */
+        h1 {
+            color: #ffde00; /* Yellow inspired by Pokémon logo */
+            text-shadow: 2px 2px #3b4cca; /* Blue shadow */
+            margin-bottom: 10px;
+            font-size: 2rem;
+            text-align: center;
+        }
+        
+        #controls {
+            margin-top: 15px;
+            font-size: 0.8rem;
+            color: #aaa;
+            text-align: center;
+        }
+
+        /* --- Pixel Font Import --- */
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+    </style>
+</head>
+<body>
+    <h1>Retro Game Engine</h1>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <canvas id="ui-layer"></canvas> <!-- UI elements like text boxes go here -->
+    </div>
+    <div id="controls">Move: Arrow Keys/WASD | Interact: Z</div>
+
+    <script>
+    // --- Asset Loading ---
+    // In a real project, these would be separate files. For this single-file setup,
+    // we embed them as Base64 strings. This is a common technique for bundling.
+    const ASSETS = {
+        // A classic GBA-style tileset
+        tileset: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAFkElEQVR4nO3dO68eRRjAYXAbKBRCsoggKgoqKhIqKhIlngCR4C0QCaIlUSEUCgVRJBCJgogPCJGBcXBcZ5w989lk9pyZvbP32M7uSSaTfWb2e88z8+xsnO1s/x8DgP8IuCsgwJCAAEOCEvxRgAFJgAFJgAFJgAHDgBEwcGAAZMBgAATAYAAQwIABAOCEAQAA4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4YQBAAThhAEABOGEAQAE4Y-AABOAAAAAElFTkSuQmCC',
+        // Player and NPC spritesheet
+        characters: 'data:image/png;base64,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'
+    };
+    const loadedAssets = {};
+    
+    // --- Asset Preloader ---
+    function loadAssets(callback) {
+        let assetsToLoad = Object.keys(ASSETS).length;
+        if (assetsToLoad === 0) {
+            callback();
+            return;
+        }
+        for (const name in ASSETS) {
+            loadedAssets[name] = new Image();
+            loadedAssets[name].src = ASSETS[name];
+            loadedAssets[name].onload = () => {
+                assetsToLoad--;
+                if (assetsToLoad === 0) {
+                    callback();
+                }
+            };
+        }
+    }
+
+    // --- Main Game Class ---
+    class Game {
+        constructor() {
+            // --- Game Setup & Constants ---
+            this.canvas = document.getElementById('gameCanvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.uiCanvas = document.getElementById('ui-layer');
+            this.uiCtx = this.uiCanvas.getContext('2d');
+
+            this.TILE_SIZE = 16;
+            this.VIEWPORT_TILES_WIDE = 15;
+            this.VIEWPORT_TILES_HIGH = 11;
+            
+            this.canvas.width = this.TILE_SIZE * this.VIEWPORT_TILES_WIDE;
+            this.canvas.height = this.TILE_SIZE * this.VIEWPORT_TILES_HIGH;
+            this.uiCanvas.width = this.canvas.width;
+            this.uiCanvas.height = this.canvas.height;
+            
+            this.ctx.imageSmoothingEnabled = false; // Ensure crisp pixels
+            this.uiCtx.imageSmoothingEnabled = false;
+            
+            this.gameState = 'roaming'; // 'roaming' or 'dialogue'
+            this.keys = {};
+            this.gameObjects = {};
+            this.dialogueBox = new DialogueBox();
+            this.waterAnimationTimer = 0;
+            this.waterFrame = 0;
+
+            this.init();
+        }
+
+        init() {
+            this.setupInputListeners();
+            this.setupMap();
+
+            this.player = new Player(this, 7, 7);
+            this.gameObjects['player'] = this.player;
+
+            const npc1 = new NPC(this, 10, 5, {
+                sprite: { sx: 16, sy: 0 },
+                messages: [
+                    "Welcome to our little town!",
+                    "The world is full of amazing adventures.",
+                    "Be careful in the tall grass!"
+                ]
+            });
+            this.gameObjects['npc1'] = npc1;
+            
+            const sign1 = new Sign(this, 15, 3, {
+                messages: ["ROUTE 118"]
+            });
+            this.gameObjects['sign1'] = sign1;
+
+            this.gameLoop();
+        }
+
+        setupInputListeners() {
+            window.addEventListener('keydown', (e) => this.keys[e.key.toLowerCase()] = true);
+            window.addEventListener('keyup', (e) => {
+                // For interactions, we only want to fire once on keyup
+                if (e.key.toLowerCase() === 'z') {
+                    this.handleInteraction();
+                }
+                this.keys[e.key.toLowerCase()] = false;
+            });
+        }
+
+        setupMap() {
+             // Map Tiles from Spritesheet (x, y coordinates in tiles)
+            const T_GRASS = { sx: 0, sy: 0 };
+            const T_PATH = { sx: 1, sy: 0 };
+            const T_FLOWERS = { sx: 2, sy: 0 };
+            const T_WATER = { sx: 0, sy: 1 };
+            const T_TREE_TOP = { sx: 3, sy: 0 };
+            const T_TREE_TRUNK = { sx: 3, sy: 1 };
+            const T_SIGN = { sx: 2, sy: 1 };
+
+            this.tileKey = [T_GRASS, T_PATH, T_FLOWERS, T_WATER, T_TREE_TOP, T_TREE_TRUNK, T_SIGN];
+
+            // 0:Grass, 1:Path, 2:Flowers, 3:Water, 4:TreeTop, 5:TreeTrunk, 6:Sign
+            const mapLayout = [
+                [4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4],
+                [5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5],
+                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6,0,0,0,0],
+                [0,2,2,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0],
+                [0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,3,3,3],
+                [0,0,0,0,0,1,0,4,4,0,0,0,0,0,0,1,0,3,3,3],
+                [0,0,0,0,0,1,0,5,5,0,0,0,0,0,0,1,0,3,3,3],
+                [1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0],
+                [0,0,0,0,0,1,0,0,2,2,0,0,0,0,0,1,0,0,0,0],
+                [0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0],
+            ];
+            
+            this.mapData = mapLayout;
+            this.MAP_WIDTH_TILES = this.mapData[0].length;
+            this.MAP_HEIGHT_TILES = this.mapData.length;
+            
+            // Tiles with collision: Water, Tree Trunk, Sign
+            this.collisionMap = this.mapData.map(row => 
+                row.map(tile => [3, 5, 6].includes(tile))
+            );
+        }
+
+        isColliding(x, y) {
+            if (x < 0 || y < 0 || x >= this.MAP_WIDTH_TILES || y >= this.MAP_HEIGHT_TILES) {
+                return true; // Out of bounds
+            }
+            // Check against map collision
+            if (this.collisionMap[y][x]) return true;
+            
+            // Check against other game objects
+            for (const id in this.gameObjects) {
+                const obj = this.gameObjects[id];
+                if (obj.isSolid && obj.x === x && obj.y === y) {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+
+        handleInteraction() {
+            if (this.gameState === 'roaming') {
+                const facingCoords = this.player.getFacingTile();
+                
+                for (const id in this.gameObjects) {
+                    const obj = this.gameObjects[id];
+                    if (obj.x === facingCoords.x && obj.y === facingCoords.y && obj.messages) {
+                        this.gameState = 'dialogue';
+                        this.dialogueBox.start(obj.messages);
+                        return;
+                    }
+                }
+            } else if (this.gameState === 'dialogue') {
+                if(this.dialogueBox.isDone()) {
+                    this.gameState = 'roaming';
+                } else {
+                    this.dialogueBox.next();
+                }
+            }
+        }
+        
+        update() {
+            // Update all game objects
+            Object.values(this.gameObjects).forEach(obj => {
+                if(obj.update) obj.update(this.keys, this.gameState);
+            });
+            
+            // Update water animation
+            this.waterAnimationTimer++;
+            if (this.waterAnimationTimer > 20) {
+                this.waterFrame = (this.waterFrame + 1) % 4; // 4 frames of water animation
+                this.waterAnimationTimer = 0;
+            }
+        }
+        
+        draw() {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.uiCtx.clearRect(0, 0, this.uiCanvas.width, this.uiCanvas.height);
+
+            // Center camera on player
+            const cameraX = this.player.pixelX - this.canvas.width / 2;
+            const cameraY = this.player.pixelY - this.canvas.height / 2;
+
+            this.drawMap(cameraX, cameraY);
+            this.drawGameObjects(cameraX, cameraY);
+            
+            if(this.gameState === 'dialogue') {
+                this.dialogueBox.draw(this.uiCtx, this.uiCanvas.width, this.uiCanvas.height);
+            }
+        }
+
+        drawMap(cameraX, cameraY) {
+            const firstTileX = Math.floor(cameraX / this.TILE_SIZE);
+            const firstTileY = Math.floor(cameraY / this.TILE_SIZE);
+            const lastTileX = firstTileX + this.VIEWPORT_TILES_WIDE + 1;
+            const lastTileY = firstTileY + this.VIEWPORT_TILES_HIGH + 1;
+
+            for (let y = firstTileY; y < lastTileY; y++) {
+                for (let x = firstTileX; x < lastTileX; x++) {
+                    if (x >= 0 && y >= 0 && x < this.MAP_WIDTH_TILES && y < this.MAP_HEIGHT_TILES) {
+                        const tileIndex = this.mapData[y][x];
+                        let tile = this.tileKey[tileIndex];
+                        let sourceX = tile.sx * this.TILE_SIZE;
+                        let sourceY = tile.sy * this.TILE_SIZE;
+
+                        // Handle animated water
+                        if (tileIndex === 3) { // Water tile
+                           sourceX = (this.waterFrame % 2) * this.TILE_SIZE;
+                           sourceY = (1 + Math.floor(this.waterFrame / 2)) * this.TILE_SIZE;
+                        }
+
+                        this.ctx.drawImage(
+                            loadedAssets.tileset,
+                            sourceX, sourceY, this.TILE_SIZE, this.TILE_SIZE,
+                            Math.floor(x * this.TILE_SIZE - cameraX),
+                            Math.floor(y * this.TILE_SIZE - cameraY),
+                            this.TILE_SIZE, this.TILE_SIZE
+                        );
+                    }
+                }
+            }
+        }
+        
+        drawGameObjects(cameraX, cameraY) {
+            const objectsToDraw = Object.values(this.gameObjects);
+            // Sort by y-coordinate to draw characters from top to bottom correctly
+            objectsToDraw.sort((a, b) => a.pixelY - b.pixelY);
+            
+            objectsToDraw.forEach(obj => {
+                if (obj.draw) obj.draw(this.ctx, cameraX, cameraY);
+            });
+        }
+
+        gameLoop() {
+            this.update();
+            this.draw();
+            requestAnimationFrame(() => this.gameLoop());
+        }
+    }
+
+    // --- Game Object Superclass ---
+    class GameObject {
+        constructor(game, x, y, config) {
+            this.game = game;
+            this.x = x; // tile x
+            this.y = y; // tile y
+            this.pixelX = x * game.TILE_SIZE;
+            this.pixelY = y * game.TILE_SIZE;
+            this.targetX = this.pixelX;
+            this.targetY = this.pixelY;
+            this.isMoving = false;
+            this.speed = 1; // pixels per frame
+            this.direction = 'down';
+            this.isSolid = config.isSolid || false;
+            this.messages = config.messages || null;
+        }
+    }
+
+    // --- Character Superclass (for Player and NPCs) ---
+    class Character extends GameObject {
+        constructor(game, x, y, config) {
+            super(game, x, y, config);
+            this.isSolid = true; // Characters are always solid
+            this.animationFrame = 0;
+            this.animationTimer = 0;
+            this.animationSpeed = 12; // Lower is faster
+            this.spriteSheet = loadedAssets.characters;
+            
+            // Define sprite positions on the sheet
+            this.spriteConfig = {
+                'down': [{x:0, y:0}, {x:16, y:0}, {x:0, y:0}, {x:32, y:0}],
+                'up': [{x:0, y:16}, {x:16, y:16}, {x:0, y:16}, {x:32, y:16}],
+                'left': [{x:0, y:32}, {x:16, y:32}, {x:0, y:32}, {x:32, y:32}],
+                'right': [{x:0, y:48}, {x:16, y:48}, {x:0, y:48}, {x:32, y:48}]
+            }
+            this.spriteOffset = config.spriteOffset || {x: 0, y: 0};
+        }
+        
+        updateMovement() {
+            if (this.isMoving) {
+                // Move towards target
+                if (this.pixelX < this.targetX) this.pixelX = Math.min(this.pixelX + this.speed, this.targetX);
+                if (this.pixelX > this.targetX) this.pixelX = Math.max(this.pixelX - this.speed, this.targetX);
+                if (this.pixelY < this.targetY) this.pixelY = Math.min(this.pixelY + this.speed, this.targetY);
+                if (this.pixelY > this.targetY) this.pixelY = Math.max(this.pixelY - this.speed, this.targetY);
+
+                // Update animation
+                this.animationTimer++;
+                if (this.animationTimer > this.animationSpeed) {
+                    this.animationFrame = (this.animationFrame + 1) % 4; // 4 frames per animation
+                    this.animationTimer = 0;
+                }
+
+                // Check if arrived at target tile
+                if (this.pixelX === this.targetX && this.pixelY === this.targetY) {
+                    this.isMoving = false;
+                    this.animationFrame = 0; // Reset to standing frame
+                }
+            }
+        }
+        
+        startMove(targetTileX, targetTileY) {
+            if (!this.game.isColliding(targetTileX, targetTileY)) {
+                this.x = targetTileX;
+                this.y = targetTileY;
+                this.targetX = this.x * this.game.TILE_SIZE;
+                this.targetY = this.y * this.game.TILE_SIZE;
+                this.isMoving = true;
+                this.animationTimer = 0;
+            }
+        }
+
+        draw(ctx, cameraX, cameraY) {
+            const frame = this.spriteConfig[this.direction][this.isMoving ? this.animationFrame : 0];
+            const drawX = Math.floor(this.pixelX - cameraX);
+            const drawY = Math.floor(this.pixelY - cameraY);
+            
+            // Draw shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.beginPath();
+            ctx.ellipse(drawX + 8, drawY + 15, 6, 3, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Draw sprite
+            ctx.drawImage(
+                this.spriteSheet,
+                frame.x + this.spriteOffset.x, frame.y + this.spriteOffset.y, 
+                this.game.TILE_SIZE, this.game.TILE_SIZE,
+                drawX, drawY - 4, // Shift sprite up slightly
+                this.game.TILE_SIZE, this.game.TILE_SIZE
+            );
+        }
+
+        getFacingTile() {
+            let facingX = this.x;
+            let facingY = this.y;
+            if (this.direction === 'up') facingY--;
+            if (this.direction === 'down') facingY++;
+            if (this.direction === 'left') facingX--;
+            if (this.direction === 'right') facingX++;
+            return { x: facingX, y: facingY };
+        }
+    }
+
+    class Player extends Character {
+        constructor(game, x, y) {
+            super(game, x, y, { 
+                spriteOffset: { x: 0, y: 0 } // Use first character on spritesheet
+            });
+        }
+
+        update(keys, gameState) {
+            this.updateMovement();
+            if (!this.isMoving && gameState === 'roaming') {
+                this.handleInput(keys);
+            }
+        }
+        
+        handleInput(keys) {
+            let targetTileX = this.x;
+            let targetTileY = this.y;
+            
+            if (keys['arrowup'] || keys['w']) {
+                this.direction = 'up';
+                targetTileY--;
+            } else if (keys['arrowdown'] || keys['s']) {
+                this.direction = 'down';
+                targetTileY++;
+            } else if (keys['arrowleft'] || keys['a']) {
+                this.direction = 'left';
+                targetTileX--;
+            } else if (keys['arrowright'] || keys['d']) {
+                this.direction = 'right';
+                targetTileX++;
+            }
+
+            if (targetTileX !== this.x || targetTileY !== this.y) {
+                this.startMove(targetTileX, targetTileY);
+            }
+        }
+    }
+
+    class NPC extends Character {
+         constructor(game, x, y, config) {
+            super(game, x, y, { 
+                spriteOffset: { x: 48, y: 0 } // Use second character on spritesheet
+            });
+            this.messages = config.messages;
+            // Future: Add simple movement patterns
+        }
+        
+        update() {
+            // NPC logic can go here, like random movement
+            this.updateMovement();
+        }
+    }
+    
+    class Sign extends GameObject {
+        constructor(game, x, y, config) {
+            super(game, x, y, config);
+        }
+        // Signs don't need update or draw methods as they are part of the map tile layer.
+        // They just exist as objects for the interaction system to find.
+    }
+    
+    class DialogueBox {
+        constructor() {
+            this.messages = [];
+            this.currentMessageIndex = 0;
+            this.isVisible = false;
+        }
+
+        start(messages) {
+            this.messages = messages;
+            this.currentMessageIndex = 0;
+            this.isVisible = true;
+        }
+
+        next() {
+            if (!this.isDone()) {
+                this.currentMessageIndex++;
+            }
+        }
+
+        isDone() {
+            const done = this.currentMessageIndex >= this.messages.length;
+            if (done) this.isVisible = false;
+            return done;
+        }
+
+        draw(ctx, width, height) {
+            if (!this.isVisible) return;
+            
+            const padding = 8;
+            const boxHeight = 50;
+            const boxY = height - boxHeight - padding;
+
+            // Draw box
+            ctx.fillStyle = 'rgba(0, 50, 100, 0.9)';
+            ctx.fillRect(padding, boxY, width - padding * 2, boxHeight);
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(padding, boxY, width - padding * 2, boxHeight);
+
+            // Draw text
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '10px "Press Start 2P"';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            
+            const text = this.messages[this.currentMessageIndex];
+            ctx.fillText(text, padding * 2, boxY + padding);
+
+            // Draw continue indicator
+            if (this.currentMessageIndex < this.messages.length - 1) {
+                ctx.fillText("▼", width - padding * 3, height - padding * 3);
+            }
+        }
+    }
+
+    // --- Start the game ---
+    window.onload = () => {
+        loadAssets(() => {
+            new Game();
+        });
+    };
+    </script>
+</body>
+</html>
+
 
