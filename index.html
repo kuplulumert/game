@@ -1,1 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Emerald Style Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            font-family: 'Courier New', monospace;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: #ffd700;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .subtitle {
+            color: #87ceeb;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        
+        .game-showcase {
+            background: #2c2c54;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 
+                0 0 30px rgba(0, 0, 0, 0.7),
+                inset 0 0 20px rgba(255, 255, 255, 0.1);
+            border: 3px solid #40407a;
+            text-align: center;
+            max-width: 800px;
+        }
+        
+        .pokemon-scene {
+            background: #87ceeb;
+            border: 2px solid #1e3c72;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: inline-block;
+        }
+        
+        #gameCanvas {
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            transform: scale(3);
+            transform-origin: center;
+            display: block;
+        }
+        
+        .description {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .feature {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #40407a;
+        }
+        
+        .feature h3 {
+            color: #ffd700;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+        
+        .github-link {
+            display: inline-block;
+            background: #4169E1;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: background 0.3s ease;
+        }
+        
+        .github-link:hover {
+            background: #5a7bef;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎮 Pokémon Emerald Style Scene</h1>
+        <p class="subtitle">Authentic GBA-era pixel art recreation</p>
+    </div>
+    
+    <div class="game-showcase">
+        <div class="pokemon-scene">
+            <canvas id="gameCanvas" width="240" height="160"></canvas>
+        </div>
+        
+        <div class="description">
+            <p>Experience a pixel-perfect recreation of a Pokémon Emerald forest scene featuring two characters in dialogue, surrounded by dense evergreen trees and scattered red flowers on a classic dirt path.</p>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <h3>🌲 Authentic Graphics</h3>
+                <p>Dense evergreen trees with dark outlines, just like the original GBA games</p>
+            </div>
+            
+            <div class="feature">
+                <h3>👥 Character Interaction</h3>
+                <p>Player character and NPC with red hat and glasses in classic dialogue scene</p>
+            </div>
+            
+            <div class="feature">
+                <h3>🎨 GBA Color Palette</h3>
+                <p>Saturated but soft tones true to Game Boy Advance aesthetics</p>
+            </div>
+            
+            <div class="feature">
+                <h3>💬 Classic Dialogue</h3>
+                <p>Authentic dialogue box with pixelated font and proper text formatting</p>
+            </div>
+        </div>
+        
+        <a href="https://github.com/kuplulumert/game" class="github-link" target="_blank">
+            View Source Code on GitHub
+        </a>
+    </div>
 
+    <script>
+        // Load the Pokemon scene
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // GBA Pokémon Emerald color palette
+        const COLORS = {
+            GRASS_LIGHT: '#7BC142',
+            GRASS_DARK: '#5A9032',
+            GRASS_CHECKER: '#6BB03A',
+            PATH_LIGHT: '#E6C878',
+            PATH_DARK: '#D4B85A',
+            PATH_SHADOW: '#C2A648',
+            TREE_TRUNK: '#8B4513',
+            TREE_TRUNK_DARK: '#654321',
+            TREE_LEAVES: '#228B22',
+            TREE_LEAVES_DARK: '#1F5F1F',
+            TREE_OUTLINE: '#0F2F0F',
+            CHAR_SKIN: '#FFDBAC',
+            CHAR_HAIR: '#8B4513',
+            CHAR_SHIRT_BLUE: '#4169E1',
+            CHAR_SHIRT_RED: '#DC143C',
+            CHAR_PANTS: '#2F4F4F',
+            CHAR_HAT: '#DC143C',
+            CHAR_GLASSES: '#000000',
+            CHAR_OUTLINE: '#000000',
+            FLOWER_RED: '#FF4444',
+            FLOWER_CENTER: '#FFFF44',
+            DIALOG_BG: '#FFFFFF',
+            DIALOG_BORDER: '#4169E1',
+            DIALOG_SHADOW: '#000000',
+            DIALOG_TEXT: '#000000',
+            SHADOW: 'rgba(0, 0, 0, 0.3)'
+        };
+
+        // Drawing functions (simplified for inline script)
+        function drawGrassTile(x, y) {
+            ctx.fillStyle = COLORS.GRASS_LIGHT;
+            ctx.fillRect(x, y, 16, 16);
+            ctx.fillStyle = COLORS.GRASS_CHECKER;
+            for (let dy = 0; dy < 16; dy += 4) {
+                for (let dx = 0; dx < 16; dx += 4) {
+                    if ((dx + dy) % 8 === 0) {
+                        ctx.fillRect(x + dx, y + dy, 2, 2);
+                    }
+                }
+            }
+            ctx.fillStyle = COLORS.GRASS_DARK;
+            ctx.fillRect(x + 2, y + 3, 1, 1);
+            ctx.fillRect(x + 6, y + 7, 1, 1);
+            ctx.fillRect(x + 10, y + 5, 1, 1);
+            ctx.fillRect(x + 14, y + 11, 1, 1);
+        }
+
+        function drawPathTile(x, y) {
+            ctx.fillStyle = COLORS.PATH_LIGHT;
+            ctx.fillRect(x, y, 16, 16);
+            ctx.fillStyle = COLORS.PATH_DARK;
+            ctx.fillRect(x + 1, y + 2, 2, 1);
+            ctx.fillRect(x + 5, y + 4, 3, 1);
+            ctx.fillRect(x + 10, y + 6, 2, 1);
+            ctx.fillRect(x + 3, y + 8, 2, 1);
+        }
+
+        function drawTree(x, y) {
+            // Simplified tree drawing
+            ctx.fillStyle = COLORS.TREE_OUTLINE;
+            ctx.fillRect(x + 1, y + 8, 16, 14);
+            ctx.fillStyle = COLORS.TREE_LEAVES;
+            ctx.fillRect(x + 2, y + 9, 14, 12);
+            ctx.fillStyle = COLORS.TREE_TRUNK;
+            ctx.fillRect(x + 7, y + 21, 4, 6);
+        }
+
+        function drawPlayer(x, y) {
+            ctx.fillStyle = COLORS.SHADOW;
+            ctx.fillRect(x + 2, y + 14, 12, 2);
+            ctx.fillStyle = COLORS.CHAR_OUTLINE;
+            ctx.fillRect(x + 4, y, 8, 16);
+            ctx.fillStyle = COLORS.CHAR_HAIR;
+            ctx.fillRect(x + 5, y + 1, 6, 4);
+            ctx.fillStyle = COLORS.CHAR_SKIN;
+            ctx.fillRect(x + 6, y + 4, 4, 2);
+            ctx.fillStyle = COLORS.CHAR_SHIRT_BLUE;
+            ctx.fillRect(x + 5, y + 6, 6, 6);
+        }
+
+        function drawNPC(x, y) {
+            ctx.fillStyle = COLORS.SHADOW;
+            ctx.fillRect(x + 2, y + 14, 12, 2);
+            ctx.fillStyle = COLORS.CHAR_OUTLINE;
+            ctx.fillRect(x + 4, y, 8, 16);
+            ctx.fillStyle = COLORS.CHAR_HAT;
+            ctx.fillRect(x + 4, y + 1, 8, 4);
+            ctx.fillStyle = COLORS.CHAR_SKIN;
+            ctx.fillRect(x + 5, y + 4, 6, 4);
+            ctx.fillStyle = COLORS.CHAR_GLASSES;
+            ctx.fillRect(x + 5, y + 5, 2, 2);
+            ctx.fillRect(x + 9, y + 5, 2, 2);
+        }
+
+        function drawDialogueBox() {
+            const boxX = 8, boxY = 120, boxWidth = 224, boxHeight = 32;
+            ctx.fillStyle = COLORS.DIALOG_SHADOW;
+            ctx.fillRect(boxX + 2, boxY + 2, boxWidth, boxHeight);
+            ctx.fillStyle = COLORS.DIALOG_BORDER;
+            ctx.fillRect(boxX - 2, boxY - 2, boxWidth + 4, boxHeight + 4);
+            ctx.fillStyle = COLORS.DIALOG_BG;
+            ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+            ctx.fillStyle = COLORS.DIALOG_TEXT;
+            ctx.font = '8px monospace';
+            ctx.fillText("MAGE put the POTION away in the", boxX + 8, boxY + 12);
+            ctx.fillText("BAG's ITEMS POCKET.", boxX + 8, boxY + 22);
+        }
+
+        // Draw the scene
+        ctx.fillStyle = '#87CEEB';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        for (let y = 0; y < 160; y += 16) {
+            for (let x = 0; x < 240; x += 16) {
+                drawGrassTile(x, y);
+            }
+        }
+        
+        for (let x = 0; x < 240; x += 16) {
+            drawPathTile(x, 64);
+            drawPathTile(x, 80);
+        }
+        
+        // Draw trees
+        const treePositions = [[16,0],[48,0],[80,0],[112,0],[144,0],[176,0],[208,0],
+                              [0,16],[32,16],[64,16],[96,16],[128,16],[160,16],[192,16],[224,16],
+                              [16,96],[48,96],[80,96],[112,96],[144,96],[176,96],[208,96]];
+        treePositions.forEach(([x,y]) => drawTree(x,y));
+        
+        drawPlayer(96, 56);
+        drawNPC(128, 56);
+        drawDialogueBox();
+        
+        console.log('Pokémon scene loaded successfully!');
+    </script>
+</body>
+</html>
