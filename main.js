@@ -5,8 +5,8 @@ const ctx = canvas.getContext('2d');
 const TILE_SIZE = 16;
 const MAP_WIDTH = 32;
 const MAP_HEIGHT = 24;
-const VIEWPORT_WIDTH = 15;
-const VIEWPORT_HEIGHT = 10;
+const VIEWPORT_WIDTH = 30;
+const VIEWPORT_HEIGHT = 20;
 
 // Camera position
 let camera = { x: 0, y: 0 };
@@ -415,7 +415,18 @@ function gameLoop() {
 }
 
 // Initialize and start the game
+console.log('Initializing game...');
 const gameMap = generateMap();
+console.log('Map generated:', gameMap.length, 'x', gameMap[0].length);
 camera.x = Math.floor((MAP_WIDTH - VIEWPORT_WIDTH) / 2);
 camera.y = Math.floor((MAP_HEIGHT - VIEWPORT_HEIGHT) / 2);
-gameLoop();
+console.log('Starting game loop...');
+
+// Test draw to make sure canvas works
+ctx.fillStyle = 'red';
+ctx.fillRect(0, 0, 50, 50);
+console.log('Test rectangle drawn');
+
+setTimeout(() => {
+    gameLoop();
+}, 100);

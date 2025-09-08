@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pokemon Graphics Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #2c5f41;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        canvas {
+            border: 2px solid white;
+            image-rendering: pixelated;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="480" height="320"></canvas>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        console.log('Canvas loaded:', canvas.width, 'x', canvas.height);
+        
+        // Test if canvas is working
+        ctx.fillStyle = 'red';
+        ctx.fillRect(10, 10, 50, 50);
+        
+        const TILE_SIZE = 16;
+        
+        // Draw grass tile
+        function drawGrass(x, y) {
+            // Base grass
+            ctx.fillStyle = '#4a7c59';
+            ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+            
+            // Grass details
+            ctx.fillStyle = '#5d8a6b';
+            ctx.fillRect(x + 2, y + 2, 2, 1);
+            ctx.fillRect(x + 6, y + 4, 2, 1);
+            ctx.fillRect(x + 10, y + 6, 2, 1);
+            ctx.fillRect(x + 4, y + 8, 2, 1);
+            ctx.fillRect(x + 8, y + 10, 2, 1);
+            ctx.fillRect(x + 12, y + 12, 2, 1);
+        }
+        
+        // Draw water tile
+        function drawWater(x, y) {
+            ctx.fillStyle = '#1e6091';
+            ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+            
+            ctx.fillStyle = '#2980b9';
+            ctx.fillRect(x + 2, y + 4, 4, 1);
+            ctx.fillRect(x + 8, y + 8, 4, 1);
+        }
+        
+        // Draw tree
+        function drawTree(x, y) {
+            drawGrass(x, y);
+            
+            // Trunk
+            ctx.fillStyle = '#8b4513';
+            ctx.fillRect(x + 6, y + 10, 4, 6);
+            
+            // Leaves
+            ctx.fillStyle = '#228b22';
+            ctx.fillRect(x + 2, y + 2, 12, 10);
+            
+            // Leaf details
+            ctx.fillStyle = '#32cd32';
+            ctx.fillRect(x + 4, y + 4, 3, 3);
+            ctx.fillRect(x + 9, y + 6, 3, 3);
+        }
+        
+        // Draw house
+        function drawHouse(x, y) {
+            drawGrass(x, y);
+            
+            // House base
+            ctx.fillStyle = '#d4af37';
+            ctx.fillRect(x + 2, y + 6, 12, 10);
+            
+            // Roof
+            ctx.fillStyle = '#8b0000';
+            ctx.fillRect(x + 1, y + 2, 14, 6);
+            
+            // Door
+            ctx.fillStyle = '#8b4513';
+            ctx.fillRect(x + 6, y + 10, 4, 6);
+        }
+        
+        // Draw a simple map
+        console.log('Drawing map...');
+        
+        // Fill with grass
+        for (let y = 0; y < 20; y++) {
+            for (let x = 0; x < 30; x++) {
+                drawGrass(x * TILE_SIZE, y * TILE_SIZE);
+            }
+        }
+        
+        // Add water at top
+        for (let x = 0; x < 30; x++) {
+            for (let y = 0; y < 3; y++) {
+                drawWater(x * TILE_SIZE, y * TILE_SIZE);
+            }
+        }
+        
+        // Add some trees
+        drawTree(5 * TILE_SIZE, 8 * TILE_SIZE);
+        drawTree(12 * TILE_SIZE, 6 * TILE_SIZE);
+        drawTree(20 * TILE_SIZE, 10 * TILE_SIZE);
+        drawTree(25 * TILE_SIZE, 15 * TILE_SIZE);
+        
+        // Add some houses
+        drawHouse(8 * TILE_SIZE, 12 * TILE_SIZE);
+        drawHouse(18 * TILE_SIZE, 14 * TILE_SIZE);
+        
+        console.log('Map drawing complete!');
+    </script>
+</body>
+</html>
