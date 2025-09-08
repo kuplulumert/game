@@ -1,0 +1,32 @@
+body {
+    margin: 0;
+    padding: 0;
+    background: #1a1a2e;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: monospace;
+}
+
+.game-container {
+    background: #2c2c54;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 
+        0 0 30px rgba(0, 0, 0, 0.7),
+        inset 0 0 20px rgba(255, 255, 255, 0.1);
+    border: 3px solid #40407a;
+}
+
+#gameCanvas {
+    background: #87ceeb;
+    border: 2px solid #1e3c72;
+    border-radius: 8px;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    transform: scale(3);
+    transform-origin: center;
+    display: block;
+}
