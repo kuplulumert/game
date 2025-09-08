@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generated Pokémon Emerald Scene</title>
+    <style>
+        body { margin: 0; padding: 20px; background: #16213e; font-family: monospace; color: #fff; }
+        .container { max-width: 820px; margin: 0 auto; }
+        h1 { color: #ffd700; }
+        .grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .card { background: rgba(44,44,84,0.8); border: 2px solid #40407a; border-radius: 12px; padding: 16px; }
+        .pixel { image-rendering: pixelated; image-rendering: crisp-edges; image-rendering: -moz-crisp-edges; display: block; }
+        .back { display: inline-block; margin-bottom: 16px; color: #ffd700; text-decoration: none; }
+        .caption { color: #ddd; margin-top: 8px; }
+    </style>
+    <link rel="preload" href="gba_scene_x3.png" as="image">
+    <link rel="preload" href="gba_scene_x2.png" as="image">
+    <link rel="preload" href="gba_scene.png" as="image">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <script>
+        // Cache busting helper in case the hosting layer caches aggressively
+        function bust(src){ return src + '?v=' + Date.now(); }
+        window.addEventListener('DOMContentLoaded', () => {
+            const img1 = document.getElementById('img1');
+            const img2 = document.getElementById('img2');
+            const img3 = document.getElementById('img3');
+            img1.src = bust('gba_scene_x3.png');
+            img2.src = bust('gba_scene_x2.png');
+            img3.src = bust('gba_scene.png');
+        });
+    </script>
+    <style>
+        /* Ensure pixel-perfect displayed sizes */
+        #img1 { width: 720px; height: 480px; }
+        #img2 { width: 480px; height: 320px; }
+        #img3 { width: 240px; height: 160px; }
+    </style>
+    <noscript>
+        <style>
+            /* Fallback sizes if JS disabled */
+            #img1 { width: 720px; height: 480px; }
+            #img2 { width: 480px; height: 320px; }
+            #img3 { width: 240px; height: 160px; }
+        </style>
+    </noscript>
+    </head>
+<body>
+    <div class="container">
+        <a class="back" href="index_menu.html">← Back to menu</a>
+        <h1>Generated Pokémon Emerald Scene (PNG)</h1>
+        <div class="grid">
+            <div class="card">
+                <img id="img1" class="pixel" alt="GBA scene x3" />
+                <div class="caption">Scaled x3 (720x480)</div>
+            </div>
+            <div class="card">
+                <img id="img2" class="pixel" alt="GBA scene x2" />
+                <div class="caption">Scaled x2 (480x320)</div>
+            </div>
+            <div class="card">
+                <img id="img3" class="pixel" alt="GBA scene x1" />
+                <div class="caption">Native (240x160)</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
