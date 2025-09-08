@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Game Demos</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            font-family: 'Courier New', monospace;
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #ffd700;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .demo-card {
+            background: rgba(44, 44, 84, 0.8);
+            border: 2px solid #40407a;
+            border-radius: 15px;
+            padding: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .demo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        
+        .demo-card h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+        }
+        
+        .demo-card p {
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .demo-link {
+            display: inline-block;
+            background: #4169E1;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: background 0.3s ease;
+        }
+        
+        .demo-link:hover {
+            background: #5a7bef;
+        }
+        
+        .featured {
+            border: 3px solid #ffd700;
+            background: rgba(255, 215, 0, 0.1);
+        }
+        
+        .description {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Pokémon Game Demos</h1>
+        
+        <div class="description">
+            <p>Welcome to the Pokémon-style game collection! Choose from authentic GBA-era recreations with pixel-perfect graphics and nostalgic gameplay.</p>
+        </div>
+        
+        <div class="demo-grid">
+            <div class="demo-card featured">
+                <h3>🌲 Pokémon Emerald Scene</h3>
+                <p><strong>Featured Demo!</strong><br>
+                A pixel-perfect recreation of a Pokémon Emerald forest scene with two characters, dialogue box, and authentic GBA graphics. Complete with evergreen trees, dirt paths, and classic dialogue.</p>
+                <a href="pokemon_scene.html" class="demo-link">View Scene</a>
+            </div>
+            
+            <div class="demo-card">
+                <h3>🗺️ Interactive Map Explorer</h3>
+                <p>Explore a randomly generated Pokémon-style overworld with trees, houses, water areas, and stone paths. Use arrow keys to scroll around the map and discover different areas.</p>
+                <a href="index.html" class="demo-link">Explore Map</a>
+            </div>
+            
+            <div class="demo-card">
+                <h3>🎯 Simple Graphics Demo</h3>
+                <p>A simplified version showcasing basic Pokémon-style graphics including grass tiles, water, trees, and houses. Perfect for seeing the core visual elements in action.</p>
+                <a href="simple.html" class="demo-link">View Demo</a>
+            </div>
+        </div>
+        
+        <div style="margin-top: 40px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 10px;">
+            <h3>🎮 Controls & Features</h3>
+            <p><strong>Interactive Map:</strong> Use arrow keys to scroll<br>
+            <strong>Graphics:</strong> Authentic GBA-style pixel art<br>
+            <strong>Resolution:</strong> Native GBA scaling with pixel-perfect rendering</p>
+        </div>
+    </div>
+</body>
+</html>
