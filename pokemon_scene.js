@@ -44,8 +44,8 @@ const COLORS = {
     SHADOW: 'rgba(0, 0, 0, 0.3)'
 };
 
-// Clear canvas with light blue background
-ctx.fillStyle = '#87CEEB';
+// Clear canvas (we'll fully paint grass)
+ctx.fillStyle = '#6BB03A';
 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 // Draw grass tiles with checker pattern
@@ -53,25 +53,19 @@ function drawGrassTile(x, y) {
     // Base grass
     ctx.fillStyle = COLORS.GRASS_LIGHT;
     ctx.fillRect(x, y, 16, 16);
-    
-    // Checker pattern
+    // Checker pattern blocks
     ctx.fillStyle = COLORS.GRASS_CHECKER;
-    for (let dy = 0; dy < 16; dy += 4) {
-        for (let dx = 0; dx < 16; dx += 4) {
-            if ((dx + dy) % 8 === 0) {
-                ctx.fillRect(x + dx, y + dy, 2, 2);
+    for (let ty = 0; ty < 16; ty += 8) {
+        for (let tx = 0; tx < 16; tx += 8) {
+            if (((x + tx) / 8 + (y + ty) / 8) % 2 === 1) {
+                ctx.fillRect(x + tx, y + ty, 8, 8);
             }
         }
     }
-    
-    // Dark grass accents
+    // Tiny accents
     ctx.fillStyle = COLORS.GRASS_DARK;
-    ctx.fillRect(x + 2, y + 3, 1, 1);
-    ctx.fillRect(x + 6, y + 7, 1, 1);
-    ctx.fillRect(x + 10, y + 5, 1, 1);
-    ctx.fillRect(x + 14, y + 11, 1, 1);
-    ctx.fillRect(x + 4, y + 13, 1, 1);
-    ctx.fillRect(x + 12, y + 1, 1, 1);
+    ctx.fillRect(x + 3, y + 2, 1, 1);
+    ctx.fillRect(x + 6, y + 5, 1, 1);
 }
 
 // Draw dirt path tile
@@ -79,63 +73,37 @@ function drawPathTile(x, y) {
     // Base path
     ctx.fillStyle = COLORS.PATH_LIGHT;
     ctx.fillRect(x, y, 16, 16);
-    
-    // Path texture
+    // Edge accents top/bottom
     ctx.fillStyle = COLORS.PATH_DARK;
-    ctx.fillRect(x + 1, y + 2, 2, 1);
-    ctx.fillRect(x + 5, y + 4, 3, 1);
-    ctx.fillRect(x + 10, y + 6, 2, 1);
-    ctx.fillRect(x + 3, y + 8, 2, 1);
-    ctx.fillRect(x + 8, y + 10, 3, 1);
-    ctx.fillRect(x + 12, y + 12, 2, 1);
-    ctx.fillRect(x + 2, y + 14, 2, 1);
-    
-    // Path shadows
-    ctx.fillStyle = COLORS.PATH_SHADOW;
-    ctx.fillRect(x + 4, y + 3, 1, 1);
-    ctx.fillRect(x + 7, y + 7, 1, 1);
-    ctx.fillRect(x + 11, y + 11, 1, 1);
-    ctx.fillRect(x + 6, y + 13, 1, 1);
+    ctx.fillRect(x, y, 16, 1);
+    ctx.fillRect(x, y + 1, 16, 1);
+    ctx.fillRect(x, y + 15, 16, 1);
+    ctx.fillRect(x, y + 14, 16, 1);
+    // Speckles
+    ctx.fillRect(x + 2, y + 6, 1, 1);
+    ctx.fillRect(x + 6, y + 8, 1, 1);
+    ctx.fillRect(x + 10, y + 10, 1, 1);
 }
 
 // Draw evergreen tree
 function drawTree(x, y) {
-    // Tree outline (drawn first, then filled over)
+    // Layered canopy blocks with outline feel
+    // Bottom layer (dark)
     ctx.fillStyle = COLORS.TREE_OUTLINE;
-    // Trunk outline
-    ctx.fillRect(x + 6, y + 20, 6, 8);
-    // Tree body outline
-    ctx.fillRect(x + 1, y + 8, 16, 14);
-    ctx.fillRect(x + 3, y + 4, 12, 6);
-    ctx.fillRect(x + 5, y + 2, 8, 4);
-    ctx.fillRect(x + 6, y, 6, 4);
-    
-    // Tree trunk
-    ctx.fillStyle = COLORS.TREE_TRUNK;
-    ctx.fillRect(x + 7, y + 21, 4, 6);
-    
-    // Trunk highlight
-    ctx.fillStyle = COLORS.TREE_TRUNK_DARK;
-    ctx.fillRect(x + 9, y + 22, 1, 4);
-    
-    // Tree foliage layers (from bottom to top)
-    ctx.fillStyle = COLORS.TREE_LEAVES;
-    // Bottom layer
-    ctx.fillRect(x + 2, y + 9, 14, 12);
-    // Middle layer
-    ctx.fillRect(x + 4, y + 5, 10, 6);
-    // Top layer
-    ctx.fillRect(x + 6, y + 1, 6, 6);
-    
-    // Dark foliage details
+    ctx.fillRect(x + 1, y + 20, 16, 8);
+    ctx.fillRect(x + 3, y + 14, 12, 6);
+    ctx.fillRect(x + 5, y + 9, 8, 5);
+    ctx.fillRect(x + 7, y + 5, 6, 4);
+    // Foliage
     ctx.fillStyle = COLORS.TREE_LEAVES_DARK;
-    ctx.fillRect(x + 3, y + 18, 2, 2);
-    ctx.fillRect(x + 13, y + 16, 2, 2);
-    ctx.fillRect(x + 6, y + 14, 2, 2);
-    ctx.fillRect(x + 10, y + 12, 2, 2);
-    ctx.fillRect(x + 5, y + 8, 2, 2);
-    ctx.fillRect(x + 11, y + 6, 2, 2);
-    ctx.fillRect(x + 7, y + 3, 2, 2);
+    ctx.fillRect(x + 2, y + 20, 14, 7);
+    ctx.fillRect(x + 4, y + 14, 10, 5);
+    ctx.fillRect(x + 6, y + 9, 8, 4);
+    ctx.fillStyle = COLORS.TREE_LEAVES;
+    ctx.fillRect(x + 6, y + 5, 6, 3);
+    // Trunk
+    ctx.fillStyle = COLORS.TREE_TRUNK;
+    ctx.fillRect(x + 7, y + 26, 4, 2);
 }
 
 // Draw small red flower
@@ -154,7 +122,7 @@ function drawFlower(x, y) {
 
 // Draw character shadow
 function drawShadow(x, y, width, height) {
-    ctx.fillStyle = COLORS.SHADOW;
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
     ctx.fillRect(x, y, width, height);
 }
 

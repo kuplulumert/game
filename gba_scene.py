@@ -10,13 +10,15 @@ WIDTH, HEIGHT = 240, 160  # GBA native resolution
 
 # --- Palette (saturated but soft, GBA-esque) ---
 PALETTE = {
-    "grass_light": (126, 200, 80),      # bright grass green
-    "grass_dark": (112, 184, 70),       # slight checker alternate
-    "path": (229, 196, 90),             # yellow dirt path
-    "path_edge": (198, 165, 70),        # edge accent for path
+    "grass_light": (123, 193, 66),      # bright grass green (GBA-esque)
+    "grass_dark": (103, 171, 56),       # checker alt
+    "grass_accent": (90, 150, 52),      # tiny tufts
+    "path": (226, 191, 92),             # yellow dirt path
+    "path_edge": (184, 156, 70),        # edge accent for path
+    "path_speck": (200, 168, 82),       # dirt speckle
     "tree_mid": (36, 146, 84),          # evergreen mid
-    "tree_light": (54, 166, 102),       # evergreen light block
-    "tree_dark": (20, 94, 58),          # evergreen dark block
+    "tree_light": (56, 168, 104),       # evergreen light block
+    "tree_dark": (18, 96, 60),          # evergreen dark block
     "outline": (16, 40, 32),            # dark outline (near-black green)
     "trunk": (110, 82, 50),             # small trunk hint
     "flower_red": (214, 54, 54),        # red flowers
@@ -298,36 +300,53 @@ def draw_text(draw: ImageDraw.ImageDraw, text: str, x: int, y: int, max_width: i
 
 def draw_grass_and_path(base: Image.Image, path_y: int, path_h: int) -> None:
     draw = ImageDraw.Draw(base)
-    # Grass checker pattern (8x8 tiles)
+    # Grass checker pattern (8x8 tiles) with accents
     for ty in range(0, HEIGHT, 8):
         for tx in range(0, WIDTH, 8):
             use_dark = ((tx // 8) + (ty // 8)) % 2 == 1
             color = PALETTE["grass_dark"] if use_dark else PALETTE["grass_light"]
             draw.rectangle((tx, ty, tx + 7, ty + 7), fill=color)
+            # tiny accents in select tiles for texture
+            if ((tx // 8) % 2 == 0) and ((ty // 8) % 2 == 1):
+                draw.point((tx + 3, ty + 2), fill=PALETTE["grass_accent"]) 
+                draw.point((tx + 6, ty + 5), fill=PALETTE["grass_accent"]) 
 
     # Dirt path horizontally
     y0, y1 = path_y, path_y + path_h - 1
     draw.rectangle((0, y0, WIDTH - 1, y1), fill=PALETTE["path"])
-    # Path edges
-    draw.line((0, y0, WIDTH - 1, y0), fill=PALETTE["path_edge"])
-    draw.line((0, y1, WIDTH - 1, y1), fill=PALETTE["path_edge"])
+    # Path edges (double lined for GBA vibe)
+    draw.line((0, y0, WIDTH - 1, y0), fill=PALETTE["path_edge"])  
+    draw.line((0, y0 + 1, WIDTH - 1, y0 + 1), fill=PALETTE["path_speck"]) 
+    draw.line((0, y1, WIDTH - 1, y1), fill=PALETTE["path_edge"])  
+    draw.line((0, y1 - 1, WIDTH - 1, y1 - 1), fill=PALETTE["path_speck"]) 
+    # Path speckles
+    for x in range(2, WIDTH - 2, 8):
+        draw.rectangle((x, y0 + 6, x + 1, y0 + 7), fill=PALETTE["path_speck"]) 
+        draw.rectangle((x + 3, y0 + path_h // 2, x + 4, y0 + path_h // 2 + 1), fill=PALETTE["path_speck"]) 
+        draw.rectangle((x + 6, y1 - 6, x + 7, y1 - 5), fill=PALETTE["path_speck"]) 
 
 
 def draw_tree(img: Image.Image, x: int, y: int) -> None:
-    """Draw a 16-bit-esque evergreen tree with distinct dark outline. Size ~28x28."""
+    """Draw a more authentic evergreen with layered canopy and dark outline. ~28x30."""
     d = ImageDraw.Draw(img)
-    # Leaf clusters as polygons (no gradients, only solid blocks with outline)
-    clusters = [
-        ((x + 4, y + 10), (x + 24, y + 10), (x + 20, y + 4), (x + 8, y + 4)),
-        ((x + 2, y + 18), (x + 26, y + 18), (x + 24, y + 11), (x + 4, y + 11)),
-        ((x + 6, y + 24), (x + 22, y + 24), (x + 24, y + 18), (x + 4, y + 18)),
+    # Canopy layers (bottom to top) using stepped trapezoids with outline
+    layers = [
+        (PALETTE["tree_dark"],  (x + 2,  y + 20,  x + 26, y + 20,  x + 22, y + 26,  x + 6,  y + 26)),
+        (PALETTE["tree_mid"],   (x + 4,  y + 14,  x + 24, y + 14,  x + 21, y + 20,  x + 7,  y + 20)),
+        (PALETTE["tree_light"], (x + 6,  y + 9,   x + 22, y + 9,   x + 20, y + 14,  x + 8,  y + 14)),
+        (PALETTE["tree_light"], (x + 8,  y + 5,   x + 20, y + 5,   x + 18, y + 9,   x + 10, y + 9)),
+        (PALETTE["tree_mid"],   (x + 10, y + 2,   x + 18, y + 2,   x + 17, y + 5,   x + 11, y + 5)),
     ]
-    fills = [PALETTE["tree_light"], PALETTE["tree_mid"], PALETTE["tree_dark"]]
-    for poly, fill in zip(clusters, fills):
-        d.polygon(poly, fill=fill, outline=PALETTE["outline"])  # outlined blocks
+    for fill, coords in layers:
+        poly = [(coords[i], coords[i + 1]) for i in range(0, len(coords), 2)]
+        d.polygon(poly, fill=fill, outline=PALETTE["outline"]) 
 
-    # Tiny trunk hint (flat color)
-    d.rectangle((x + 12, y + 25, x + 16, y + 27), fill=PALETTE["trunk"], outline=PALETTE["outline"]) 
+    # Side leaf lumps for a fuller silhouette
+    d.polygon([(x + 1, y + 16), (x + 6, y + 12), (x + 6, y + 18)], fill=PALETTE["tree_mid"], outline=PALETTE["outline"]) 
+    d.polygon([(x + 26, y + 16), (x + 21, y + 12), (x + 21, y + 18)], fill=PALETTE["tree_mid"], outline=PALETTE["outline"]) 
+
+    # Trunk (subtle)
+    d.rectangle((x + 12, y + 26, x + 16, y + 28), fill=PALETTE["trunk"], outline=PALETTE["outline"]) 
 
 
 def scatter_flowers(img: Image.Image, regions: list[tuple[int, int, int, int]], seed: int = 1337, density: int = 14) -> None:
@@ -360,28 +379,30 @@ def draw_shadow(img: Image.Image, x: int, y: int, w: int, h: int) -> None:
 
 
 def draw_player_back(img: Image.Image, cx: int, cy: int) -> None:
-    """Draw a simple top-down player (back view) centered at (cx, cy)."""
+    """Top-down player (back view) with cap and backpack, outlined."""
     d = ImageDraw.Draw(img)
-    # Dimensions
     w, h = 16, 24
     left, top = cx - w // 2, cy - h // 2
 
     # Shadow
     draw_shadow(img, left + 2, top + h - 6, 12, 4)
 
-    # Body (backpack green)
-    d.rectangle((left + 5, top + 10, left + 10, top + 20), fill=PALETTE["cloth_green"], outline=PALETTE["outline"]) 
-    # Head
-    d.rectangle((left + 4, top + 4, left + 11, top + 10), fill=PALETTE["skin"], outline=PALETTE["outline"]) 
-    # Cap/Hair back (blue cap)
-    d.rectangle((left + 3, top + 2, left + 12, top + 6), fill=PALETTE["cloth_blue"], outline=PALETTE["outline"]) 
-    # Arms
-    d.rectangle((left + 3, top + 12, left + 5, top + 16), fill=PALETTE["cloth_blue"], outline=PALETTE["outline"]) 
-    d.rectangle((left + 10, top + 12, left + 12, top + 16), fill=PALETTE["cloth_blue"], outline=PALETTE["outline"]) 
+    # Cap (blue) back and brim
+    d.rectangle((left + 3, top + 1, left + 12, top + 4), fill=PALETTE["cloth_blue"], outline=PALETTE["outline"]) 
+    d.rectangle((left + 4, top + 4, left + 11, top + 5), fill=PALETTE["cloth_blue"], outline=PALETTE["outline"]) 
+    # Head (back)
+    d.rectangle((left + 4, top + 6, left + 11, top + 11), fill=PALETTE["skin"], outline=PALETTE["outline"]) 
+    # Backpack (green)
+    d.rectangle((left + 5, top + 11, left + 10, top + 20), fill=PALETTE["cloth_green"], outline=PALETTE["outline"]) 
+    # Shoulder straps
+    d.rectangle((left + 4, top + 12, left + 5, top + 15), fill=PALETTE["cloth_blue"], outline=PALETTE["outline"]) 
+    d.rectangle((left + 10, top + 12, left + 11, top + 15), fill=PALETTE["cloth_blue"], outline=PALETTE["outline"]) 
+    # Legs
+    d.rectangle((left + 6, top + 20, left + 9, top + 22), fill=PALETTE["cloth_blue"], outline=PALETTE["outline"]) 
 
 
 def draw_npc_front(img: Image.Image, cx: int, cy: int) -> None:
-    """Draw a simple top-down NPC (front view) with red hat and glasses centered at (cx, cy)."""
+    """Top-down NPC (front) with red hat and glasses, outlined."""
     d = ImageDraw.Draw(img)
     w, h = 16, 24
     left, top = cx - w // 2, cy - h // 2
@@ -389,16 +410,19 @@ def draw_npc_front(img: Image.Image, cx: int, cy: int) -> None:
     # Shadow
     draw_shadow(img, left + 2, top + h - 6, 12, 4)
 
-    # Hat (red)
-    d.rectangle((left + 3, top + 1, left + 12, top + 5), fill=PALETTE["npc_hat_red"], outline=PALETTE["outline"]) 
+    # Hat crown and brim
+    d.rectangle((left + 3, top + 1, left + 12, top + 4), fill=PALETTE["npc_hat_red"], outline=PALETTE["outline"]) 
+    d.rectangle((left + 2, top + 3, left + 13, top + 4), fill=PALETTE["npc_hat_red"], outline=PALETTE["outline"]) 
     # Face
-    d.rectangle((left + 4, top + 6, left + 11, top + 12), fill=PALETTE["skin"], outline=PALETTE["outline"]) 
+    d.rectangle((left + 4, top + 5, left + 11, top + 11), fill=PALETTE["skin"], outline=PALETTE["outline"]) 
     # Glasses (two squares with a bridge)
-    d.rectangle((left + 5, top + 8, left + 6, top + 10), outline=PALETTE["black"]) 
-    d.rectangle((left + 9, top + 8, left + 10, top + 10), outline=PALETTE["black"]) 
-    d.point((left + 7, top + 9), fill=PALETTE["black"])  # bridge
+    d.rectangle((left + 5, top + 7, left + 6, top + 9), outline=PALETTE["black"]) 
+    d.rectangle((left + 9, top + 7, left + 10, top + 9), outline=PALETTE["black"]) 
+    d.point((left + 7, top + 8), fill=PALETTE["black"]) 
     # Torso (blue shirt)
-    d.rectangle((left + 4, top + 12, left + 11, top + 20), fill=PALETTE["cloth_blue"], outline=PALETTE["outline"]) 
+    d.rectangle((left + 4, top + 11, left + 11, top + 19), fill=PALETTE["cloth_blue"], outline=PALETTE["outline"]) 
+    # Legs/shoes
+    d.rectangle((left + 6, top + 19, left + 9, top + 22), fill=PALETTE["outline"], outline=PALETTE["outline"]) 
 
 
 def draw_dialogue_box(img: Image.Image, text: str) -> None:
@@ -413,7 +437,10 @@ def draw_dialogue_box(img: Image.Image, text: str) -> None:
     d.rounded_rectangle((x0 + 2, y0 + 2, x1 + 2, y1 + 2), radius=radius, fill=PALETTE["box_shadow"]) 
 
     # Box
-    d.rounded_rectangle((x0, y0, x1, y1), radius=radius, fill=PALETTE["box_white"], outline=PALETTE["box_border"], width=2)
+    d.rounded_rectangle((x0, y0, x1, y1), radius=radius, fill=PALETTE["box_white"], outline=PALETTE["box_border"], width=3)
+    # Little advance arrow at bottom-right
+    arrow_x, arrow_y = x1 - 14, y1 - 10
+    d.polygon([(arrow_x, arrow_y), (arrow_x + 4, arrow_y), (arrow_x + 2, arrow_y + 3)], fill=PALETTE["box_border"]) 
 
     # Text area
     text_x = x0 + margin_x + 2
